@@ -110,6 +110,7 @@ void listRec(const char *path, int recursive, const char *name_S, int size)
         {
             printf("ERROR\n");
             printf("wrong sect_types\n");
+            free(s_heds);
             return ;
 
         }
