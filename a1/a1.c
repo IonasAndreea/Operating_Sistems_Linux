@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-void listRec(const char *path, int recursive, char *name_S, int size)
+void listRec(const char *path, int recursive, const char *name_S, int size)
  {
     DIR *dir = NULL;
     struct dirent *entry = NULL;
@@ -23,7 +23,7 @@ void listRec(const char *path, int recursive, char *name_S, int size)
             && strcmp(entry->d_name, "..") != 0) {
                 snprintf(fullPath, 700, "%s/%s", path, entry->d_name);
                     if(lstat(fullPath, &statbuf) == 0) {
-                        if(name_S != NULL){
+                        if(strcmp(name_S, "NULL" )!=0){
                             if(strncmp(entry->d_name, name_S, strlen(name_S)) == 0){
                             printf("%s\n", fullPath);
                         }
@@ -76,7 +76,7 @@ int main(int argc, char **argv){
     char path1[1000];
     char p[10];
     char n[100];
-    char *nameStart = NULL;
+    char nameStart[100] = "NULL";
     int recursive = 0;
     int size = -1 ;
     if(argc >= 2){
@@ -94,15 +94,19 @@ int main(int argc, char **argv){
         			}
                 if(strncmp(argv[i], "name_starts_with=",17) == 0){
                     sscanf(argv[i],"%[^=]=%s", n, nameStart);
-                    //printf("%s", nameStart);
                 }
-                if(strncmp(argv[i], "size_greater=",13) ==0){
+                if(strncmp(argv[i], "size_greater=",13) == 0){
                     size = atoi(argv[i]+13);
             }
         
         }
          printf("SUCCESS\n");
             listRec(path1, recursive, nameStart, size);
+        }
+
+        if(strcmp(argv[1],"parse") == 0)
+        {
+
         }
 
          return 0;
