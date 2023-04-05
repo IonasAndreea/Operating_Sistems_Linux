@@ -5,6 +5,17 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
+typedef struct section_headers
+{
+    char sect_name[9];
+    char sect_type;
+    int sect_offset;
+    int sect_size;
+}s_headers;
 
 void listRec(const char *path, int recursive, const char *name_S, int size)
  {
@@ -46,6 +57,81 @@ void listRec(const char *path, int recursive, const char *name_S, int size)
  closedir(dir);
  }
 
+ void parse(const char* path)
+ {
+    int fd = -1;
+    char version;
+    char no_of_sections;
+    short header_size;
+    char magic;
+
+    fd = open(path, O_RDONLY);
+    if (fd == -1) {
+        perror("Could not open input file\n");
+        return ;
+    }
+
+    lseek(fd,-3,SEEK_END);
+    read(fd,&header_size,2);
+   // printf("%d", header_size);//
+
+    read(fd,&magic,1);
+    if(magic != 'R')
+    {
+        printf("ERROR\n");
+        printf("wrong magic\n");
+        return ;
+    }
+
+    lseek(fd,-header_size, SEEK_CUR);
+    read(fd,&version,1);
+    if(version < 21 || version > 71)
+    {
+        printf("ERROR\n");
+        printf("wrong version\n");
+        return ;
+    }
+
+    read(fd,&no_of_sections,1);
+    if(no_of_sections < 4 || no_of_sections > 17)
+    {
+        printf("ERROR\n");
+        printf("wrong sect_nr\n");
+        return ;
+    }
+
+
+    s_headers *s_heds = (s_headers*)malloc(no_of_sections * sizeof(s_headers)); 
+    for(int i = 0; i < no_of_sections; i++)
+    {
+        read(fd, s_heds[i].sect_name,8);
+        read(fd, &s_heds[i].sect_type,1);
+        if(s_heds[i].sect_type != 60 && s_heds[i].sect_type != 52 && s_heds[i].sect_type != 73 && s_heds[i].sect_type != 17)
+        {
+            printf("ERROR\n");
+            printf("wrong sect_types\n");
+            return ;
+
+        }
+        read(fd, &s_heds[i].sect_offset,4);
+        read(fd, &s_heds[i].sect_size,4);
+    }
+
+    printf("SUCCESS\n");
+    printf("version=%d\n", version);
+    printf("nr_sections=%d\n", no_of_sections);
+
+    for(int i = 0; i < no_of_sections; i++)
+    {
+        printf("section%d: %s %d %d\n", i+1, s_heds[i].sect_name, s_heds[i].sect_type, s_heds[i].sect_size);
+
+    }
+
+        free(s_heds);
+        close(fd);
+    }
+
+
 /*int list(const char *path)
  {
    DIR *dir = NULL;
@@ -73,9 +159,9 @@ void listRec(const char *path, int recursive, const char *name_S, int size)
 
 
 int main(int argc, char **argv){
-    char path1[1000];
+    char path1[1000], path_p[1000];
     char p[10];
-    char n[100];
+    char n[100], p1[100];
     char nameStart[100] = "NULL";
     int recursive = 0;
     int size = -1 ;
@@ -106,7 +192,11 @@ int main(int argc, char **argv){
 
         if(strcmp(argv[1],"parse") == 0)
         {
-
+               if(strncmp(argv[2], "path=",5) == 0){
+                    sscanf(argv[2], "%[^=]=%s",p1, path_p);
+                
+            }
+            parse(path_p);
         }
 
          return 0;
