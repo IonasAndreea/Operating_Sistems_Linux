@@ -24,7 +24,7 @@ void *thread_function1 (void* arg)
 
     TH_STRUCT *s = (TH_STRUCT*)arg;
 
-    if(s->proc == 3)
+    if(s->proc == 3 || s->proc == 6)
     {
        sem_wait(s->sem);
 
@@ -33,7 +33,7 @@ void *thread_function1 (void* arg)
     info(BEGIN,s->proc, s->thr);
 
     info(END, s->proc, s->thr);
-    if(s->proc == 3)
+    if(s->proc == 3 || s->proc == 6)
     {
         sem_post(s->sem);
     
@@ -81,7 +81,6 @@ int main(){
     if(fork() == 0)
     {
         info(BEGIN, 2, 0);
-        //sem_t sem2;
         sem_init(&m3,0,0);
         sem_init(&m4,0,0);
 
