@@ -15,6 +15,9 @@ typedef struct{
     sem_t *sem;
 }TH_STRUCT;
 
+sem_t m3;
+sem_t m4;
+
 
 void *thread_function1 (void* arg)
 {
@@ -38,7 +41,34 @@ void *thread_function1 (void* arg)
     return NULL;
 }
 
+void *thread_f(void *arg)
+{
+    TH_STRUCT *s = (TH_STRUCT*)arg;
+    if(s->proc == 2 && s->thr == 3)
+    {
+        sem_wait(&m3);
+    
+    }
+    info(BEGIN, s->proc, s->thr);
+
+    if(s->proc == 2 && s->thr == 4)
+    {
+        sem_post(&m3);
+        sem_wait(&m4);
+
+    }
+    info(END, s->proc, s->thr);
+
+    if (s->proc == 2 && s->thr == 3)
+    {
+        sem_post(&m4);
+        
+    }
+    return NULL;
+}
+
 int main(){
+    
     TH_STRUCT param[40];
     TH_STRUCT param2[5];
     TH_STRUCT param6[6];
@@ -51,22 +81,37 @@ int main(){
     if(fork() == 0)
     {
         info(BEGIN, 2, 0);
-        sem_t sem2;
-        sem_init(&sem2,0,1);
+        //sem_t sem2;
+        sem_init(&m3,0,0);
+        sem_init(&m4,0,0);
+
 
         for(int i = 0; i < 5; i++)
         {
             param2[i].proc = 2;
             param2[i].thr = i+1;
-            param2[i].sem = &sem2;
-            pthread_create(&tids2[i],NULL, thread_function1, &param2[i]);
+
+            //param2[i].sem = &sem2;
+            /*if(i == 2)
+            {
+                pthread_mutex_init(&m3, NULL);
+            }
+            if(i == 3)
+            {
+                pthread_mutex_init(&m4, NULL);
+            }*/
+            pthread_create(&tids2[i],NULL, thread_f, &param2[i]);
         }
 
         for(int i = 0; i < 5; i++)
         {
             pthread_join(tids2[i], NULL);
         }
-        sem_destroy(&sem2);
+        sem_destroy(&m3);
+        sem_destroy(&m4);
+        
+
+
         if(fork() == 0)
         {
             info(BEGIN, 3 , 0);
@@ -86,6 +131,7 @@ int main(){
                 pthread_join(tids[i], NULL);
             }
             sem_destroy(&sem);
+
 
             if(fork() == 0)
             {
